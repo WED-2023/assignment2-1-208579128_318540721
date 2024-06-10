@@ -1,8 +1,9 @@
 <template>
   <div class="container">
+    <NavigationBar />
     <h1 class="title">Main Page</h1>
     <RecipePreviewList title="Randome Recipes" class="RandomRecipes center" />
-    <router-link v-if="!$root.store.username" to="/login" tag="button">You need to Login to vue this</router-link>
+    <router-link v-if="!$root.store.username" to="/login" tag="button">You need to Login to view this</router-link>
     {{ !$root.store.username }}
     <RecipePreviewList
       title="Last Viewed Recipes"
@@ -23,9 +24,12 @@
 
 <script>
 import RecipePreviewList from "../components/RecipePreviewList";
+import NavigationBar from "../components/NavigationBar";
+
 export default {
   components: {
-    RecipePreviewList
+    RecipePreviewList,
+    NavigationBar
   }
 };
 </script>
