@@ -5,8 +5,10 @@ import recipe_preview from "../assets/mocks/recipe_preview.json";
 
 export function mockGetRecipesPreview(amount = 1) {
   let recipes = [];
-  for(let i = 0; i < amount; i++){
-    recipes.push(recipe_preview);
+  for (let i = 0; i < amount; i++) {
+    // Clone the recipe object and append the index i to its ID
+    let clonedRecipe = { ...recipe_preview, id: `${recipe_preview.id}_${i}` };
+    recipes.push(clonedRecipe);
   }
 
   return { data: { recipes: recipes } };

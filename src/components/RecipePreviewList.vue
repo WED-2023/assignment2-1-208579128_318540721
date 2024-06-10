@@ -6,7 +6,10 @@
     </h3>
     <b-row>
       <b-col v-for="r in recipes" :key="r.id">
-        <RecipePreview class="recipePreview" :recipe="r" />
+        <RecipePreview
+          class="recipePreview"
+          :recipe="r"
+        />
       </b-col>
     </b-row>
   </b-container>
@@ -15,6 +18,7 @@
 <script>
 import RecipePreview from "./RecipePreview.vue";
 import { mockGetRecipesPreview } from "../services/recipes.js";
+
 export default {
   name: "RecipePreviewList",
   components: {
@@ -37,19 +41,15 @@ export default {
   methods: {
     async updateRecipes() {
       try {
-        // const response = await this.axios.get(
-        //   this.$root.store.server_domain + "/recipes/random",
-        // );
-
         const amountToFetch = 5; // Set this to how many recipes you want to fetch
         const response = mockGetRecipesPreview(amountToFetch);
 
+        const recipes = response.data.recipes.map(recipe => ({
+          ...recipe,
+          clicked: localStorage.getItem(`clicked_${recipe.id}`) === 'true'
+        }));
 
-        console.log(response);
-        const recipes = response.data.recipes;
-        console.log(recipes);
-        this.recipes = [];
-        this.recipes.push(...recipes);
+        this.recipes = recipes;
       } catch (error) {
         console.log(error);
       }
