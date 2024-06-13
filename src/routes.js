@@ -1,5 +1,7 @@
 import Main from "./pages/MainPage";
 import NotFound from "./pages/NotFoundPage";
+import About from "./pages/About.vue";
+import MyRecipes from "./pages/MyRecipes.vue"
 
 const routes = [
   {
@@ -7,10 +9,16 @@ const routes = [
     name: "main",
     component: Main,
   },
+  
   {
     path: "/register",
     name: "register",
     component: () => import("./pages/RegisterPage"),
+  },
+  {
+    path: "/my-recipes",
+    name: "MyRecipes",
+    component: MyRecipes
   },
   {
     path: "/login",
@@ -31,6 +39,11 @@ const routes = [
     path: "*",
     name: "notFound",
     component: NotFound,
+  },
+  {
+    path: "/about",
+    name: "About",
+    component: About
   },
 ];
 

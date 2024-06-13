@@ -44,6 +44,7 @@
 <script>
 import { mockGetRecipeFullDetails } from "../services/recipes.js";
 export default {
+  
   data() {
     return {
       recipe: null

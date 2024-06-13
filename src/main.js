@@ -24,6 +24,8 @@ import {
   AlertPlugin,
   ToastPlugin,
   LayoutPlugin,
+  ModalPlugin,
+  FormCheckboxPlugin,
 } from "bootstrap-vue";
 [
   FormGroupPlugin,
@@ -36,6 +38,8 @@ import {
   AlertPlugin,
   ToastPlugin,
   LayoutPlugin,
+  ModalPlugin,
+  FormCheckboxPlugin,
 ].forEach((x) => Vue.use(x));
 Vue.use(Vuelidate);
 

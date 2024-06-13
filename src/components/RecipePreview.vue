@@ -7,7 +7,9 @@
     <p>Vegan: {{ recipe.vegan ? 'Yes' : 'No' }}</p>
     <p>Vegetarian: {{ recipe.vegetarian ? 'Yes' : 'No' }}</p>
     <p>Gluten-free: {{ recipe.glutenFree ? 'Yes' : 'No' }}</p>
-    <button @click.stop="toggleFavorite">{{ recipe.favorite ? 'Remove from Favorites' : 'Add to Favorites' }}</button>
+    <b-button :variant="recipe.favorite ? 'danger' : 'primary'" @click.stop="toggleFavorite">
+      {{ recipe.favorite ? 'Remove from Favorites' : 'Add to Favorites' }}
+    </b-button>
   </div>
 </template>
 
@@ -58,7 +60,7 @@ export default {
 }
 
 .clicked {
-  background-color: yellow;
+  background-color: rgb(192, 192, 144);
 }
 
 .favorite {
