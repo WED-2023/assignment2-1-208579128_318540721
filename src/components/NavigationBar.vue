@@ -23,9 +23,6 @@
           <b-nav-item>
             <router-link to="/register" class="nav-link">Register</router-link>
           </b-nav-item>
-          <b-nav-item>
-            <router-link to="/my-recipes" class="dropdown-item">My Recipes</router-link>
-          </b-nav-item>
         </template>
         <template v-else>
           <b-navbar-text class="mr-2">{{ $root.store.username }}</b-navbar-text>
@@ -67,7 +64,8 @@ export default {
 
 <style scoped>
 .navbar-custom {
-  background-color: #343a40; /* Dark background */
+  background-image: url('@/assets/navbar-background.png');
+  background-size: cover;
   padding: 1rem 2rem;
 }
 .navbar-brand {
