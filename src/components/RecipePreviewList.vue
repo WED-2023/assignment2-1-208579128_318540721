@@ -1,11 +1,11 @@
 <template>
   <b-container>
     <h3>
-      {{ title }}:
+      {{ title }}
       <slot></slot>
     </h3>
     <b-row>
-      <b-col v-for="r in recipes" :key="r.id">
+      <b-col v-for="r in recipesWithClickedState" :key="r.id">
         <RecipePreview
           class="recipePreview"
           :recipe="r"
@@ -19,6 +19,7 @@
 import RecipePreview from "./RecipePreview.vue";
 import { mockGetRecipesPreview } from "../services/recipes.js";
 
+
 export default {
   name: "RecipePreviewList",
   components: {
@@ -27,33 +28,35 @@ export default {
   props: {
     title: {
       type: String,
+      required: false
+    },
+    recipes: {
+      type: Array,
       required: true
     }
   },
   data() {
     return {
-      recipes: []
+      recipesWithClickedState: []
     };
   },
-  mounted() {
-    this.updateRecipes();
+  watch: {
+    recipes: {
+      immediate: true,
+      handler(newRecipes) {
+        this.updateRecipes(newRecipes);
+      }
+    }
   },
   methods: {
-    async updateRecipes() {
-      try {
-        const amountToFetch = 5;
-        const response = await mockGetRecipesPreview(amountToFetch);
+    updateRecipes(newRecipes) {
+      const updatedRecipes = newRecipes.map(recipe => ({
+        ...recipe,
+        clicked: localStorage.getItem(`clicked_${recipe.id}`) === 'true',
+        favorite: localStorage.getItem(`favorite_${recipe.id}`) === 'true'
+      }));
+      this.recipesWithClickedState = updatedRecipes;
 
-        const recipes = response.data.recipes.map(recipe => ({
-          ...recipe,
-          clicked: localStorage.getItem(`clicked_${recipe.id}`) === 'true',
-          favorite: localStorage.getItem(`favorite_${recipe.id}`) === 'true'
-        }));
-
-        this.recipes = recipes;
-      } catch (error) {
-        console.log(error);
-      }
     }
   }
 };
