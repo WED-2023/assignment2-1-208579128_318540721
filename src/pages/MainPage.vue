@@ -3,6 +3,7 @@
     <NavigationBar />
     <h1 class="title">Main Page</h1>
 
+
     <div class="columns">
       <!-- Left Column -->
       <div class="column">
@@ -30,18 +31,22 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script>
 import RecipePreviewList from "../components/RecipePreviewList";
 import NavigationBar from "../components/NavigationBar";
+
 import { mockGetRecipesPreview, mockGetRecipesPreviewByIds } from "../services/recipes.js";
+
 
 export default {
   components: {
     RecipePreviewList,
     NavigationBar
+
   },
   data() {
     return {
@@ -75,6 +80,7 @@ export default {
 
       
     }
+
   }
 };
 </script>

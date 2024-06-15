@@ -17,6 +17,8 @@
 
 <script>
 import RecipePreview from "./RecipePreview.vue";
+import { mockGetRecipesPreview } from "../services/recipes.js";
+
 
 export default {
   name: "RecipePreviewList",
@@ -54,6 +56,7 @@ export default {
         favorite: localStorage.getItem(`favorite_${recipe.id}`) === 'true'
       }));
       this.recipesWithClickedState = updatedRecipes;
+
     }
   }
 };

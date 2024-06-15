@@ -4,8 +4,10 @@ import recipe_preview from "../assets/mocks/recipe_preview.json";
 
 
 export function mockGetRecipesPreview(amount = 1) {
+
   // Shuffle the recipes array to ensure randomness
   const shuffledRecipes = recipe_preview.sort(() => 0.5 - Math.random());
+
 
   // Ensure that the amount does not exceed the total number of recipes
   const maxAmount = Math.min(3, shuffledRecipes.length);
@@ -20,6 +22,7 @@ export function mockGetRecipesPreview(amount = 1) {
 }
 
 export function mockGetRecipeFullDetails(recipeId) {
+
   // For simplicity, we can return an empty object since full recipe details are not provided
   return { data: { recipe: {} } };
 }
@@ -33,3 +36,4 @@ export function mockGetRecipesPreviewByIds(recipeIds = []) {
 }
 
   
+

@@ -18,6 +18,7 @@ export default {
   },
   methods: {
     handleClick() {
+
   this.$emit('previewClick', this.recipe.id);
   this.recipe.clicked = true;
   localStorage.setItem(`clicked_${this.recipe.id}`, 'true');
@@ -31,6 +32,14 @@ export default {
 
   this.$router.push({ name: 'recipe', params: { id: this.recipe.id } });
 },
+toggleFavorite() {
+      this.recipe.favorite = !this.recipe.favorite;
+      if (this.recipe.favorite) {
+        localStorage.setItem(`favorite_${this.recipe.id}`, 'true');
+      } else {
+        localStorage.removeItem(`favorite_${this.recipe.id}`);
+      }
+    },
     onHover(event) {
       event.target.style.cursor = 'pointer';
     },
