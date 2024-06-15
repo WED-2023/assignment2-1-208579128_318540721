@@ -11,6 +11,11 @@ const routes = [
   },
   
   {
+    path: "/favorites",
+    name: "favorites",
+    component: () => import("./pages/FavoritesPage"),
+  },
+  {
     path: "/register",
     name: "register",
     component: () => import("./pages/RegisterPage"),
