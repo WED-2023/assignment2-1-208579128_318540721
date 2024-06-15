@@ -20,12 +20,21 @@ export default {
   },
   methods: {
     handleClick() {
-      this.$emit('previewClick', this.recipe.id);
-      this.recipe.clicked = true;
-      localStorage.setItem(`clicked_${this.recipe.id}`, 'true');
-      this.$router.push({ name: 'recipe', params: { id: this.recipe.id } });
-    },
-    toggleFavorite() {
+
+  this.$emit('previewClick', this.recipe.id);
+  this.recipe.clicked = true;
+  localStorage.setItem(`clicked_${this.recipe.id}`, 'true');
+
+  // Update last viewed list
+  let lastViewed = JSON.parse(localStorage.getItem('lastViewedRecipes')) || [];
+  lastViewed = lastViewed.filter(id => id !== this.recipe.id); // Remove if it exists
+  lastViewed.unshift(this.recipe.id); // Add to the front
+  if (lastViewed.length > 3) lastViewed.pop(); // Keep only the last 3
+  localStorage.setItem('lastViewedRecipes', JSON.stringify(lastViewed));
+
+  this.$router.push({ name: 'recipe', params: { id: this.recipe.id } });
+},
+toggleFavorite() {
       this.recipe.favorite = !this.recipe.favorite;
       if (this.recipe.favorite) {
         localStorage.setItem(`favorite_${this.recipe.id}`, 'true');
