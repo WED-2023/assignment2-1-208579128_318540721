@@ -37,17 +37,12 @@
 
 <script>
 import RecipePreviewList from "../components/RecipePreviewList";
-import CreateRecipeModal from "../components/CreateRecipeModal";
-import NavigationBar from "../components/NavigationBar";
-
 import { mockGetRecipesPreview, mockGetRecipesPreviewByIds } from "../services/recipes.js";
 
 
 export default {
   components: {
     RecipePreviewList,
-    NavigationBar
-
   },
   data() {
     return {
@@ -71,6 +66,7 @@ export default {
      
 
     },
+
     loadLastViewedRecipes() {
       const lastViewedIds = JSON.parse(localStorage.getItem('lastViewedRecipes')) || [];
         // Call the function to get the preview list of last viewed recipes by their IDs
