@@ -6,45 +6,44 @@
         <img :src="recipe.image" class="center" />
       </div>
       <div class="recipe-body">
-        <div class="wrapper">
-          <div class="wrapped">
-            <div class="mb-3">
-              <div>Ready in {{ recipe.readyInMinutes }} minutes</div>
-              <div>Likes: {{ recipe.aggregateLikes }} likes</div>
-            </div>
-            Ingredients:
-            <ul>
-              <li
-                v-for="(r, index) in recipe.extendedIngredients"
-                :key="index + '_' + r.id"
-              >
-                {{ r.original }}
-              </li>
-            </ul>
-          </div>
-          <div class="wrapped">
-            Instructions:
-            <ol>
-              <li v-for="s in recipe._instructions" :key="s.number">
-                {{ s.step }}
-              </li>
-            </ol>
-          </div>
+        <div class="ingredients-box">
+          <h3>Ingredients:</h3>
+          <ul>
+            <li v-for="(ingredient, index) in recipe.extendedIngredients" :key="index">
+              {{ ingredient.original }}
+            </li>
+          </ul>
+        </div>
+        <div class="instructions-box">
+          <h3>Instructions:</h3>
+          <ol>
+            <li v-for="(instruction, index) in recipe.analyzedInstructions" :key="index">
+              {{ instruction }}
+            </li>
+          </ol>
+        </div>
+        <div class="summary-box mt-4">
+          <h3>Summary:</h3>
+          <p>{{ recipe.summary }}</p>
         </div>
       </div>
-      <!-- <pre>
-      {{ $route.params }}
-      {{ recipe }}
-    </pre
-      > -->
+    </div>
+    <div v-else>
+      <p>Loading...</p>
     </div>
   </div>
 </template>
 
 <script>
 import { mockGetRecipeFullDetails } from "../services/recipes.js";
+
 export default {
-  
+  props: {
+    id: {
+      type: String,
+      required: true
+    }
+  },
   data() {
     return {
       recipe: null
@@ -52,77 +51,91 @@ export default {
   },
   async created() {
     try {
-      let response;
-      // response = this.$route.params.response;
+      const response = mockGetRecipeFullDetails(this.id);
 
-      try {
-        // response = await this.axios.get(
-        //   this.$root.store.server_domain + "/recipes/" + this.$route.params.recipeId,
-        //   {
-        //     withCredentials: true
-        //   }
-        // );
-
-        response = mockGetRecipeFullDetails(this.$route.params.recipeId);
-
-        // console.log("response.status", response.status);
-        if (response.status !== 200) this.$router.replace("/NotFound");
-      } catch (error) {
-        console.log("error.response.status", error.response.status);
+      if (!response || !response.data || !response.data.recipe) {
+        console.error('Recipe not found or invalid response structure:', response);
         this.$router.replace("/NotFound");
         return;
       }
 
-      let {
+      const {
         analyzedInstructions,
         instructions,
         extendedIngredients,
         aggregateLikes,
         readyInMinutes,
         image,
-        title
+        title,
+        vegan,
+        vegetarian,
+        glutenFree,
+        summary
       } = response.data.recipe;
 
-      let _instructions = analyzedInstructions
-        .map((fstep) => {
-          fstep.steps[0].step = fstep.name + fstep.steps[0].step;
-          return fstep.steps;
-        })
-        .reduce((a, b) => [...a, ...b], []);
-
-      let _recipe = {
+      const _recipe = {
         instructions,
-        _instructions,
         analyzedInstructions,
         extendedIngredients,
         aggregateLikes,
         readyInMinutes,
         image,
-        title
+        title,
+        vegan,
+        vegetarian,
+        glutenFree,
+        summary
       };
 
       this.recipe = _recipe;
     } catch (error) {
-      console.log(error);
+      console.error('Error fetching recipe:', error);
+      this.$router.replace("/NotFound");
     }
-  }
+  },
 };
 </script>
 
 <style scoped>
-.wrapper {
-  display: flex;
+.container {
+  padding: 20px;
 }
-.wrapped {
-  width: 50%;
-}
-.center {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
-}
-/* .recipe-header{
 
-} */
+.recipe-header {
+  text-align: center;
+}
+
+.recipe-body {
+  margin-top: 20px;
+}
+
+.ingredients-box {
+  margin-bottom: 20px;
+}
+
+.instructions-box {
+  margin-bottom: 20px;
+}
+
+.summary-box {
+  margin-top: 20px;
+}
+
+ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+}
+
+h3 {
+  margin-bottom: 10px;
+}
+
+p {
+  line-height: 1.6;
+}
 </style>

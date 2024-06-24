@@ -22,9 +22,17 @@ export function mockGetRecipesPreview(amount = 1) {
 }
 
 export function mockGetRecipeFullDetails(recipeId) {
+  // Ensure recipeId is an integer
+  const id = parseInt(recipeId, 10);
 
-  // For simplicity, we can return an empty object since full recipe details are not provided
-  return { data: { recipe: {} } };
+  // Find the recipe with the matching ID
+  const selected_recipe = recipe_full_view.find(recipe => recipe.id === id);
+
+  if (selected_recipe) {
+    return { data: { recipe: selected_recipe } };
+  } else {
+    return null; // Handle the case where the recipe is not found
+  }
 }
 export function mockGetRecipesPreviewByIds(recipeIds = []) {
   // Filter the recipe previews to include only those with matching IDs
