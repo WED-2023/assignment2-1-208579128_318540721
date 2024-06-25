@@ -2,9 +2,9 @@ import Vue from "vue";
 import App from "./App.vue";
 import VueAxios from "vue-axios";
 import axios from "axios";
-
 import routes from "./routes";
 import VueRouter from "vue-router";
+
 Vue.use(VueRouter);
 const router = new VueRouter({
   routes,
@@ -24,6 +24,8 @@ import {
   AlertPlugin,
   ToastPlugin,
   LayoutPlugin,
+  ModalPlugin,
+  FormCheckboxPlugin,
 } from "bootstrap-vue";
 [
   FormGroupPlugin,
@@ -36,28 +38,25 @@ import {
   AlertPlugin,
   ToastPlugin,
   LayoutPlugin,
+  ModalPlugin,
+  FormCheckboxPlugin,
 ].forEach((x) => Vue.use(x));
 Vue.use(Vuelidate);
 
 axios.interceptors.request.use(
-  function(config) {
-    // Do something before request is sent
+  function (config) {
     return config;
   },
-  function(error) {
-    // Do something with request error
+  function (error) {
     return Promise.reject(error);
   }
 );
 
-// Add a response interceptor
 axios.interceptors.response.use(
-  function(response) {
-    // Do something with response data
+  function (response) {
     return response;
   },
-  function(error) {
-    // Do something with response error
+  function (error) {
     return Promise.reject(error);
   }
 );
@@ -72,16 +71,12 @@ const shared_data = {
   login(username) {
     localStorage.setItem("username", username);
     this.username = username;
-    console.log("login", this.username);
   },
   logout() {
-    console.log("logout");
     localStorage.removeItem("username");
     this.username = undefined;
   },
 };
-console.log(shared_data);
-// Vue.prototype.$root.store = shared_data;
 
 new Vue({
   router,

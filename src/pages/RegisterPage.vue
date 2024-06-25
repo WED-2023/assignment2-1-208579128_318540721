@@ -2,6 +2,7 @@
   <div class="container">
     <h1 class="title">Register</h1>
     <b-form @submit.prevent="onRegister" @reset.prevent="onReset">
+      <!-- Username -->
       <b-form-group
         id="input-group-username"
         label-cols-sm="3"
@@ -21,10 +22,47 @@
           Username length should be between 3-8 characters long
         </b-form-invalid-feedback>
         <b-form-invalid-feedback v-if="!$v.form.username.alpha">
-          Username alpha
+          Username should only contain letters
         </b-form-invalid-feedback>
       </b-form-group>
 
+      <!-- First Name -->
+      <b-form-group
+        id="input-group-firstname"
+        label-cols-sm="3"
+        label="First Name:"
+        label-for="firstName"
+      >
+        <b-form-input
+          id="firstName"
+          v-model="$v.form.firstName.$model"
+          type="text"
+          :state="validateState('firstName')"
+        ></b-form-input>
+        <b-form-invalid-feedback v-if="!$v.form.firstName.required">
+          First name is required
+        </b-form-invalid-feedback>
+      </b-form-group>
+
+      <!-- Last Name -->
+      <b-form-group
+        id="input-group-lastname"
+        label-cols-sm="3"
+        label="Last Name:"
+        label-for="lastName"
+      >
+        <b-form-input
+          id="lastName"
+          v-model="$v.form.lastName.$model"
+          type="text"
+          :state="validateState('lastName')"
+        ></b-form-input>
+        <b-form-invalid-feedback v-if="!$v.form.lastName.required">
+          Last name is required
+        </b-form-invalid-feedback>
+      </b-form-group>
+
+      <!-- Country -->
       <b-form-group
         id="input-group-country"
         label-cols-sm="3"
@@ -42,8 +80,9 @@
         </b-form-invalid-feedback>
       </b-form-group>
 
+      <!-- Password -->
       <b-form-group
-        id="input-group-Password"
+        id="input-group-password"
         label-cols-sm="3"
         label="Password:"
         label-for="password"
@@ -59,15 +98,21 @@
         </b-form-invalid-feedback>
         <b-form-text v-else-if="$v.form.password.$error" text-variant="info">
           Your password should be <strong>strong</strong>. <br />
-          For that, your password should be also:
+          For that, your password should:
         </b-form-text>
         <b-form-invalid-feedback
           v-if="$v.form.password.required && !$v.form.password.length"
         >
           Have length between 5-10 characters long
         </b-form-invalid-feedback>
+        <b-form-invalid-feedback
+          v-if="!$v.form.password.specialChar"
+        >
+          Contain at least one special character
+        </b-form-invalid-feedback>
       </b-form-group>
 
+      <!-- Confirm Password -->
       <b-form-group
         id="input-group-confirmedPassword"
         label-cols-sm="3"
@@ -90,14 +135,36 @@
         </b-form-invalid-feedback>
       </b-form-group>
 
+      <!-- Email -->
+      <b-form-group
+        id="input-group-email"
+        label-cols-sm="3"
+        label="Email:"
+        label-for="email"
+      >
+        <b-form-input
+          id="email"
+          type="email"
+          v-model="$v.form.email.$model"
+          :state="validateState('email')"
+        ></b-form-input>
+        <b-form-invalid-feedback v-if="!$v.form.email.required">
+          Email is required
+        </b-form-invalid-feedback>
+        <b-form-invalid-feedback v-if="!$v.form.email.email">
+          Must be a valid email
+        </b-form-invalid-feedback>
+      </b-form-group>
+
       <b-button type="reset" variant="danger">Reset</b-button>
       <b-button
         type="submit"
         variant="primary"
         style="width:250px;"
         class="ml-5 w-75"
-        >Register</b-button
       >
+        Register
+      </b-button>
       <div class="mt-2">
         You have an account already?
         <router-link to="login"> Log in here</router-link>
@@ -112,26 +179,27 @@
     >
       Register failed: {{ form.submitError }}
     </b-alert>
-    <!-- <b-card class="mt-3 md-3" header="Form Data Result">
-      <pre class="m-0"><strong>form:</strong> {{ form }}</pre>
-      <pre class="m-0"><strong>$v.form:</strong> {{ $v.form }}</pre>
-    </b-card> -->
   </div>
 </template>
 
 <script>
-import countries from "../assets/countries";
+import axios from 'axios';
 import {
   required,
   minLength,
   maxLength,
   alpha,
   sameAs,
-  email
+  email,
 } from "vuelidate/lib/validators";
 import { mockRegister } from "../services/auth.js";
+import { validationMixin } from "vuelidate";
+
+const specialChar = (value) => /[!@#\$%\^\&*\)\(+=._-]/.test(value);
+
 export default {
   name: "Register",
+  mixins: [validationMixin],
   data() {
     return {
       form: {
@@ -142,37 +210,53 @@ export default {
         password: "",
         confirmedPassword: "",
         email: "",
-        submitError: undefined
+        submitError: undefined,
       },
       countries: [{ value: null, text: "", disabled: true }],
-      errors: [],
-      validated: false
     };
   },
   validations: {
     form: {
       username: {
         required,
-        length: (u) => minLength(3)(u) && maxLength(8)(u),
-        alpha
+        length: (value) => minLength(3)(value) && maxLength(8)(value),
+        alpha,
+      },
+      firstName: {
+        required,
+      },
+      lastName: {
+        required,
       },
       country: {
-        required
+        required,
       },
       password: {
         required,
-        length: (p) => minLength(5)(p) && maxLength(10)(p)
+        length: (value) => minLength(5)(value) && maxLength(10)(value),
+        specialChar,
       },
       confirmedPassword: {
         required,
-        sameAsPassword: sameAs("password")
-      }
-    }
+        sameAsPassword: sameAs("password"),
+      },
+      email: {
+        required,
+        email,
+      },
+    },
   },
-  mounted() {
-    // console.log("mounted");
-    this.countries.push(...countries);
-    // console.log($v);
+  async mounted() {
+    try {
+      const response = await axios.get("https://restcountries.com/v3.1/all");
+      const countries = response.data.map(country => ({
+        value: country.name.common,
+        text: country.name.common
+      }));
+      this.countries.push(...countries);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+    }
   },
   methods: {
     validateState(param) {
@@ -181,39 +265,27 @@ export default {
     },
     async Register() {
       try {
-
-        // const response = await this.axios.post(
-        //   // "https://test-for-3-2.herokuapp.com/user/Register",
-        //   this.$root.store.server_domain + "/Register",
-
-        //   {
-        //     username: this.form.username,
-        //     password: this.form.password
-        //   }
-        // );
-
         const userDetails = {
           username: this.form.username,
-          password: this.form.password
+          firstName: this.form.firstName,
+          lastName: this.form.lastName,
+          country: this.form.country,
+          password: this.form.password,
+          email: this.form.email,
         };
 
-        const response = mockRegister(userDetails);
+        const response = await mockRegister(userDetails);
 
         this.$router.push("/login");
-        // console.log(response);
       } catch (err) {
-        console.log(err.response);
-        this.form.submitError = err.response.data.message;
+        this.form.submitError = err.message || 'Unknown error';
       }
     },
-
     onRegister() {
-      // console.log("register method called");
-      this.$v.form.$touch();
-      if (this.$v.form.$anyError) {
+      this.$v.$touch();
+      if (this.$v.$invalid) {
         return;
       }
-      // console.log("register method go");
       this.Register();
     },
     onReset() {
@@ -224,15 +296,16 @@ export default {
         country: null,
         password: "",
         confirmedPassword: "",
-        email: ""
+        email: "",
       };
       this.$nextTick(() => {
         this.$v.$reset();
       });
-    }
-  }
+    },
+  },
 };
 </script>
+
 <style lang="scss" scoped>
 .container {
   max-width: 500px;

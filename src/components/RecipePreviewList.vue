@@ -1,12 +1,15 @@
 <template>
   <b-container>
     <h3>
-      {{ title }}:
+      {{ title }}
       <slot></slot>
     </h3>
     <b-row>
-      <b-col v-for="r in recipes" :key="r.id">
-        <RecipePreview class="recipePreview" :recipe="r" />
+      <b-col v-for="r in recipesWithClickedState" :key="r.id">
+        <RecipePreview
+          class="recipePreview"
+          :recipe="r"
+        />
       </b-col>
     </b-row>
   </b-container>
@@ -15,6 +18,8 @@
 <script>
 import RecipePreview from "./RecipePreview.vue";
 import { mockGetRecipesPreview } from "../services/recipes.js";
+
+
 export default {
   name: "RecipePreviewList",
   components: {
@@ -23,36 +28,35 @@ export default {
   props: {
     title: {
       type: String,
+      required: false
+    },
+    recipes: {
+      type: Array,
       required: true
     }
   },
   data() {
     return {
-      recipes: []
+      recipesWithClickedState: []
     };
   },
-  mounted() {
-    this.updateRecipes();
+  watch: {
+    recipes: {
+      immediate: true,
+      handler(newRecipes) {
+        this.updateRecipes(newRecipes);
+      }
+    }
   },
   methods: {
-    async updateRecipes() {
-      try {
-        // const response = await this.axios.get(
-        //   this.$root.store.server_domain + "/recipes/random",
-        // );
+    updateRecipes(newRecipes) {
+      const updatedRecipes = newRecipes.map(recipe => ({
+        ...recipe,
+        clicked: localStorage.getItem(`clicked_${recipe.id}`) === 'true',
+        favorite: localStorage.getItem(`favorite_${recipe.id}`) === 'true'
+      }));
+      this.recipesWithClickedState = updatedRecipes;
 
-        const amountToFetch = 5; // Set this to how many recipes you want to fetch
-        const response = mockGetRecipesPreview(amountToFetch);
-
-
-        console.log(response);
-        const recipes = response.data.recipes;
-        console.log(recipes);
-        this.recipes = [];
-        this.recipes.push(...recipes);
-      } catch (error) {
-        console.log(error);
-      }
     }
   }
 };
