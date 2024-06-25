@@ -13,6 +13,22 @@
           class="mr-sm-2"
         ></b-form-input>
         <b-button variant="outline-success" @click="searchRecipes">Search</b-button>
+
+        <!-- Sorting Options -->
+        <b-form-select v-model="sortOrder" class="ml-2">
+          <option value="none">No Sorting</option>
+          <option value="timeAsc">Time - Ascending</option>
+          <option value="timeDesc">Time - Descending</option>
+          <option value="likesAsc">Likes - Ascending</option>
+          <option value="likesDesc">Likes - Descending</option>
+        </b-form-select>
+
+        <!-- Results per page -->
+        <b-form-select v-model="resultsPerPage" class="ml-2">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+        </b-form-select>
       </b-form>
 
       <!-- Filters -->
@@ -27,11 +43,6 @@
         <b-form-checkbox v-model="isVegetarian">Vegetarian</b-form-checkbox>
         <b-form-checkbox v-model="isGlutenFree">Gluten-free</b-form-checkbox>
       </div>
-
-      <!-- Results per page -->
-      <b-form-group label="Results per page:">
-        <b-form-select v-model="resultsPerPage" :options="[5, 10, 15]" class="mr-sm-2"></b-form-select>
-      </b-form-group>
 
       <!-- Display Search Results in a grid layout -->
       <div class="recipes-grid" v-if="recipes.length > 0">
@@ -63,22 +74,41 @@ export default {
       isVegan: false,
       isVegetarian: false,
       isGlutenFree: false,
-      resultsPerPage: 5
+      resultsPerPage: 5, // Initialize with 5 to match the default option
+      sortOrder: 'none'
     };
+  },
+  watch: {
+    resultsPerPage() {
+      this.searchRecipes();
+    },
+    sortOrder() {
+      this.searchRecipes();
+    }
   },
   methods: {
     searchRecipes() {
       let response = mockGetRecipesPreview(this.resultsPerPage);
-      
-        this.recipes = response.data.recipes.filter(recipe => {
-          return (!this.maxTime || recipe.readyInMinutes <= this.maxTime) &&
-                 (!this.minLikes || recipe.aggregateLikes >= this.minLikes) &&
-                 (!this.isVegan || recipe.vegan) &&
-                 (!this.isVegetarian || recipe.vegetarian) &&
-                 (!this.isGlutenFree || recipe.glutenFree);
-        });
-        sessionStorage.setItem('lastSearch', this.query); // Save last search
-      
+      this.recipes = response.data.recipes.filter(recipe => {
+        return (!this.maxTime || recipe.readyInMinutes <= this.maxTime) &&
+               (!this.minLikes || recipe.aggregateLikes >= this.minLikes) &&
+               (!this.isVegan || recipe.vegan) &&
+               (!this.isVegetarian || recipe.vegetarian) &&
+               (!this.isGlutenFree || recipe.glutenFree);
+      });
+      this.sortRecipes(); // Sort recipes after filtering
+      sessionStorage.setItem('lastSearch', this.query); // Save last search
+    },
+    sortRecipes() {
+      if (this.sortOrder === 'timeAsc') {
+        this.recipes.sort((a, b) => a.readyInMinutes - b.readyInMinutes);
+      } else if (this.sortOrder === 'timeDesc') {
+        this.recipes.sort((a, b) => b.readyInMinutes - a.readyInMinutes);
+      } else if (this.sortOrder === 'likesAsc') {
+        this.recipes.sort((a, b) => a.aggregateLikes - b.aggregateLikes);
+      } else if (this.sortOrder === 'likesDesc') {
+        this.recipes.sort((a, b) => b.aggregateLikes - a.aggregateLikes);
+      }
     }
   },
   mounted() {
@@ -91,32 +121,28 @@ export default {
 </script>
 
 <style scoped>
-
 .container {
-  max-width: 1200px; /* Adjust based on your preference */
+  max-width: 1200px;
   margin: auto;
   padding: 20px;
-  position: relative; /* Ensures content is positioned relative to other elements */
-  filter: none; /* Explicitly removing any inherited filters */
-  background: rgba(255, 255, 255, 0.8); /* Optional: Add a slight background to content for better readability */
+  position: relative;
 }
 
 .recipes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Creates three columns as default */
-  gap: 20px; /* Space between grid items */
-  filter: none; /* Explicitly state no filter for clarity */
+  grid-template-columns: repeat(3, 1fr); /* Ensure exactly three columns */
+  gap: 20px;
 }
 
 @media (max-width: 800px) {
   .recipes-grid {
-    grid-template-columns: repeat(2, 1fr); /* Two columns on smaller screens */
+    grid-template-columns: repeat(2, 1fr); /* Two columns for smaller screens */
   }
 }
 
 @media (max-width: 500px) {
   .recipes-grid {
-    grid-template-columns: 1fr; /* One column on very small screens */
+    grid-template-columns: 1fr; /* One column for very small screens */
   }
 }
 </style>
