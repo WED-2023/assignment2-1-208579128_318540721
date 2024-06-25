@@ -69,7 +69,7 @@ export default {
   methods: {
     searchRecipes() {
       let response = mockGetRecipesPreview(this.resultsPerPage);
-      if (response.status === 200) {
+      
         this.recipes = response.data.recipes.filter(recipe => {
           return (!this.maxTime || recipe.readyInMinutes <= this.maxTime) &&
                  (!this.minLikes || recipe.aggregateLikes >= this.minLikes) &&
@@ -78,7 +78,7 @@ export default {
                  (!this.isGlutenFree || recipe.glutenFree);
         });
         sessionStorage.setItem('lastSearch', this.query); // Save last search
-      }
+      
     }
   },
   mounted() {
