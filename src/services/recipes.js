@@ -18,10 +18,13 @@ export function mockGetRecipesPreview(amount = 1) {
   }));
 
   // Return an object containing the selected recipes
-  return { data: { recipes: selectedRecipes } };
+  return {
+    status: 200, 
+    data: { recipes: selectedRecipes } };
 }
 
 export function mockGetRecipeFullDetails(recipeId) {
+
   // Ensure recipeId is an integer
   const id = parseInt(recipeId, 10);
 

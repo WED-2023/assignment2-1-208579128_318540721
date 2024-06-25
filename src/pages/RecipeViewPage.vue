@@ -38,6 +38,7 @@
 import { mockGetRecipeFullDetails } from "../services/recipes.js";
 
 export default {
+
   props: {
     id: {
       type: String,
@@ -51,6 +52,7 @@ export default {
   },
   async created() {
     try {
+
       const response = mockGetRecipeFullDetails(this.id);
 
       if (!response || !response.data || !response.data.recipe) {
@@ -135,7 +137,9 @@ h3 {
   margin-bottom: 10px;
 }
 
+
 p {
   line-height: 1.6;
 }
 </style>
+
