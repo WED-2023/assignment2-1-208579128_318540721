@@ -18,13 +18,13 @@ export function mockGetRecipesPreview(amount = 1) {
   }));
 
   // Return an object containing the selected recipes
-  return { data: { recipes: selectedRecipes } };
+  return {
+    status: 200, 
+    data: { recipes: selectedRecipes } };
 }
 
 export function mockGetRecipeFullDetails(recipeId) {
-
-  // For simplicity, we can return an empty object since full recipe details are not provided
-  return { data: { recipe: {} } };
+  return { data: { recipe: recipe_full_view } } ;
 }
 export function mockGetRecipesPreviewByIds(recipeIds = []) {
   // Filter the recipe previews to include only those with matching IDs

@@ -44,7 +44,6 @@
 <script>
 import { mockGetRecipeFullDetails } from "../services/recipes.js";
 export default {
-  
   data() {
     return {
       recipe: null
@@ -65,7 +64,7 @@ export default {
 
         response = mockGetRecipeFullDetails(this.$route.params.recipeId);
 
-        // console.log("response.status", response.status);
+        console.log("response.status", response.status);
         if (response.status !== 200) this.$router.replace("/NotFound");
       } catch (error) {
         console.log("error.response.status", error.response.status);
