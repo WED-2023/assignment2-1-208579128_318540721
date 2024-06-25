@@ -91,18 +91,6 @@ export default {
 </script>
 
 <style scoped>
-.background-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('@/assets/searchBack.png'); /* Ensure the path is correct */
-  background-size: cover;
-  background-position: center;
-  filter: blur(8px);
-  z-index: -1; /* Keep the background behind all content */
-}
 
 .container {
   max-width: 1200px; /* Adjust based on your preference */
