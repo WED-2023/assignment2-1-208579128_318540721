@@ -2,6 +2,7 @@ import Main from "./pages/MainPage";
 import NotFound from "./pages/NotFoundPage";
 import About from "./pages/About.vue";
 import MyRecipes from "./pages/MyRecipes.vue"
+import FamilyRecipes from "./pages/FamilyRecipes.vue";
 
 const routes = [
   {
@@ -36,9 +37,11 @@ const routes = [
     component: () => import("./pages/SearchPage"),
   },
   {
-    path: "/recipe/:recipeId",  
-    name: "recipe",
-    component: () => import("./pages/RecipeViewPage"),
+    path: '/recipe/:id',
+    name: 'recipe',
+    component: () => import('./pages/RecipeViewPage'),
+    props: true,
+
   },
   // {
   //   path: "   ",
@@ -54,6 +57,11 @@ const routes = [
     path: "/about",
     name: "About",
     component: About
+  },
+  {
+    path: "/family-recipes",
+    name: "Family Recipes",
+    component: FamilyRecipes
   },
 ];
 
