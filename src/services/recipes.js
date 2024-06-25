@@ -10,7 +10,7 @@ export function mockGetRecipesPreview(amount = 1) {
 
 
   // Ensure that the amount does not exceed the total number of recipes
-  const maxAmount = Math.min(3, shuffledRecipes.length);
+  const maxAmount = Math.min(amount, shuffledRecipes.length);
 
   // Select a random subset of recipes based on the requested amount
   const selectedRecipes = shuffledRecipes.slice(0, maxAmount).map((recipe, index) => ({
