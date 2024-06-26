@@ -29,20 +29,22 @@
           <option value="10">10</option>
           <option value="15">15</option>
         </b-form-select>
-      </b-form>
 
-      <!-- Filters -->
-      <div>
-        <b-form-group label="Time (in minutes):">
-          <b-form-input type="number" v-model="maxTime" placeholder="Max time"></b-form-input>
-        </b-form-group>
-        <b-form-group label="Minimum Likes:">
-          <b-form-input type="number" v-model="minLikes" placeholder="Minimum likes"></b-form-input>
-        </b-form-group>
-        <b-form-checkbox v-model="isVegan">Vegan</b-form-checkbox>
-        <b-form-checkbox v-model="isVegetarian">Vegetarian</b-form-checkbox>
-        <b-form-checkbox v-model="isGlutenFree">Gluten-free</b-form-checkbox>
-      </div>
+        <!-- Filters Dropdown -->
+        <b-dropdown text="Filters" class="ml-2" variant="outline-info">
+          <b-dropdown-form>
+            <b-form-group label="Time (in minutes):">
+              <b-form-input type="number" v-model="maxTime" placeholder="Max time"></b-form-input>
+            </b-form-group>
+            <b-form-group label="Minimum Likes:">
+              <b-form-input type="number" v-model="minLikes" placeholder="Minimum likes"></b-form-input>
+            </b-form-group>
+            <b-form-checkbox v-model="isVegan">Vegan</b-form-checkbox>
+            <b-form-checkbox v-model="isVegetarian">Vegetarian</b-form-checkbox>
+            <b-form-checkbox v-model="isGlutenFree">Gluten-free</b-form-checkbox>
+          </b-dropdown-form>
+        </b-dropdown>
+      </b-form>
 
       <!-- Display Search Results in a grid layout -->
       <div class="recipes-grid" v-if="recipes.length > 0">
@@ -109,18 +111,34 @@ export default {
       } else if (this.sortOrder === 'likesDesc') {
         this.recipes.sort((a, b) => b.aggregateLikes - a.aggregateLikes);
       }
+    },
+    clearSearch() {
+      this.query = '';
+      this.recipes = [];
+      this.maxTime = null;
+      this.minLikes = null;
+      this.isVegan = false;
+      this.isVegetarian = false;
+      this.isGlutenFree = false;
+      this.sortOrder = 'none';
+      this.resultsPerPage = 5;
     }
   },
   mounted() {
+    this.$root.$on('clearSearch', this.clearSearch);
     this.query = sessionStorage.getItem('lastSearch') || '';
     if (this.query) {
       this.searchRecipes(); // Perform search if there was a previous search
     }
+  },
+  beforeDestroy() {
+    this.$root.$off('clearSearch', this.clearSearch);
   }
 };
 </script>
 
 <style scoped>
+
 .container {
   max-width: 1200px;
   margin: auto;
