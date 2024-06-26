@@ -14,7 +14,7 @@
           type="text"
           :state="validateState('username')"
         ></b-form-input>
-        <b-form-invalid-feedback>
+        <b-form-invalid-feedback v-if="!$v.form.username.required">
           Username is required
         </b-form-invalid-feedback>
       </b-form-group>
@@ -31,7 +31,7 @@
           v-model="$v.form.password.$model"
           :state="validateState('password')"
         ></b-form-input>
-        <b-form-invalid-feedback>
+        <b-form-invalid-feedback v-if="!$v.form.password.required">
           Password is required
         </b-form-invalid-feedback>
       </b-form-group>
@@ -57,17 +57,16 @@
     >
       Login failed: {{ form.submitError }}
     </b-alert>
-    <!-- <b-card class="mt-3" header="Form Data Result">
-      <pre class="m-0">{{ form }}</pre>
-    </b-card> -->
   </div>
 </template>
 
 <script>
 import { required } from "vuelidate/lib/validators";
-import {mockLogin} from "../services/auth.js"
+import { validationMixin } from "vuelidate";
+
 export default {
   name: "Login",
+  mixins: [validationMixin],
   data() {
     return {
       form: {
@@ -92,47 +91,40 @@ export default {
       const { $dirty, $error } = this.$v.form[param];
       return $dirty ? !$error : null;
     },
+    checkCredentials(username, password) {
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find(user => user.username === username);
+      return user && user.password === password;
+    },
+    clearSearchResults() {
+      sessionStorage.removeItem('lastSearch');
+      this.$root.$emit('clearSearch');
+    },
     async Login() {
       try {
-        
-        // const response = await this.axios.post(
-        //   this.$root.store.server_domain +"/Login",
+        if (!this.checkCredentials(this.form.username, this.form.password)) {
+          throw new Error('Invalid username or password');
+        }
 
-
-        //   {
-        //     username: this.form.username,
-        //     password: this.form.password
-        //   }
-        // );
-
-        const success = true; // modify this to test the error handling
-        const response = mockLogin(this.form.username, this.form.password, success);
-
-        // console.log(response);
-        // this.$root.loggedIn = true;
-        console.log(this.$root.store.login);
         this.$root.store.login(this.form.username);
+        this.clearSearchResults(); // Clear search results on login
         this.$router.push("/");
       } catch (err) {
-        console.log(err.response);
-        this.form.submitError = err.response.data.message;
+        this.form.submitError = err.message || 'Login failed';
       }
     },
-
     onLogin() {
-      // console.log("login method called");
       this.form.submitError = undefined;
       this.$v.form.$touch();
-      if (this.$v.form.$anyError) {
+      if (this.$v.form.$invalid) {
         return;
       }
-      // console.log("login method go");
-
       this.Login();
     }
   }
 };
 </script>
+
 <style lang="scss" scoped>
 .container {
   max-width: 400px;

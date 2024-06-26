@@ -26,6 +26,13 @@
           <h3>Summary:</h3>
           <p>{{ recipe.summary }}</p>
         </div>
+        <div class="additional-details mt-4">
+          <p>Time: {{ recipe.readyInMinutes }} mins</p>
+          <p>Likes: {{ recipe.aggregateLikes }}</p>
+          <p>Vegan: {{ recipe.vegan ? 'Yes' : 'No' }}</p>
+          <p>Vegetarian: {{ recipe.vegetarian ? 'Yes' : 'No' }}</p>
+          <p>Gluten-free: {{ recipe.glutenFree ? 'Yes' : 'No' }}</p>
+        </div>
       </div>
     </div>
     <div v-else>
@@ -38,7 +45,6 @@
 import { mockGetRecipeFullDetails } from "../services/recipes.js";
 
 export default {
-
   props: {
     id: {
       type: String,
@@ -52,7 +58,6 @@ export default {
   },
   async created() {
     try {
-
       const response = mockGetRecipeFullDetails(this.id);
 
       if (!response || !response.data || !response.data.recipe) {
@@ -123,6 +128,10 @@ export default {
   margin-top: 20px;
 }
 
+.additional-details {
+  margin-top: 20px;
+}
+
 ul {
   list-style-type: disc;
   padding-left: 20px;
@@ -137,9 +146,7 @@ h3 {
   margin-bottom: 10px;
 }
 
-
 p {
   line-height: 1.6;
 }
 </style>
-

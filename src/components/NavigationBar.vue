@@ -15,9 +15,9 @@
             <router-link to="/about" class="nav-link">About</router-link>
           </b-nav-item>
           <!-- New nav item for Family Recipes -->
-          <b-nav-item>
+          <!-- <b-nav-item>
             <router-link to="/family-recipes" class="nav-link">My Family Recipes</router-link>
-          </b-nav-item>
+          </b-nav-item> -->
         </b-navbar-nav>
         <b-navbar-nav class="ml-auto">
           <template v-if="!$root.store.username">
@@ -107,4 +107,5 @@ export default {
 .navbar-nav .nav-link {
   font-size: 1.1rem;
 }
+
 </style>

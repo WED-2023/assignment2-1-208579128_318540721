@@ -1,17 +1,14 @@
 <template>
-  <div :class="['recipe-preview', { 'clicked': recipe.clicked }]">
-    <!-- Wrap the image and details inside the router-link for navigation -->
-    <router-link :to="{ name: 'recipe', params: { recipeId: recipe.id }}" tag="div">
-      <img :src="recipe.image" alt="recipe image" @mouseover="onHover" @mouseleave="onLeave">
-      <div class="recipe-details">
-        <h3>{{ recipe.title }}</h3>
-        <p>Time: {{ recipe.readyInMinutes }} mins</p>
-        <p>Likes: {{ recipe.aggregateLikes }}</p>
-        <p>Vegan: {{ recipe.vegan ? 'Yes' : 'No' }}</p>
-        <p>Vegetarian: {{ recipe.vegetarian ? 'Yes' : 'No' }}</p>
-        <p>Gluten-free: {{ recipe.glutenFree ? 'Yes' : 'No' }}</p>
-      </div>
-    </router-link>
+  <div :class="['recipe-preview', { 'clicked': recipe.clicked }]" @click="handleClick">
+    <img :src="recipe.image" alt="recipe image" @mouseover="onHover" @mouseleave="onLeave">
+    <div class="recipe-details">
+      <h3>{{ recipe.title }}</h3>
+      <p>Time: {{ recipe.readyInMinutes }} mins</p>
+      <p>Likes: {{ recipe.aggregateLikes }}</p>
+      <p>Vegan: {{ recipe.vegan ? 'Yes' : 'No' }}</p>
+      <p>Vegetarian: {{ recipe.vegetarian ? 'Yes' : 'No' }}</p>
+      <p>Gluten-free: {{ recipe.glutenFree ? 'Yes' : 'No' }}</p>
+    </div>
     <b-button 
       :variant="recipe.favorite ? 'danger' : 'primary'" 
       @click.stop="toggleFavorite" 
@@ -21,7 +18,6 @@
     </b-button>
   </div>
 </template>
-
 
 <script>
 export default {
@@ -41,7 +37,7 @@ export default {
       if (lastViewed.length > 3) lastViewed.pop(); // Keep only the last 3
       localStorage.setItem('lastViewedRecipes', JSON.stringify(lastViewed));
 
-      //this.$router.push({ name: 'recipe', params: { recipeId: this.recipe.id } });
+      this.$router.push({ name: 'recipe', params: { id: this.recipe.id } });
     },
     toggleFavorite() {
       this.recipe.favorite = !this.recipe.favorite;
