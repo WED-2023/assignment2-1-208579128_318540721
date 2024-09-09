@@ -1,53 +1,46 @@
 <template>
   <div>
-    <!-- Background Container for Blurred Image -->
     <div class="background-container"></div>
-
-    <!-- Main Container for Content -->
     <div class="container">
       <h1 class="title">Search Recipes</h1>
-      <b-form inline>
+      <b-form @submit.prevent="searchRecipes">
         <b-form-input
           v-model="query"
           placeholder="Search for recipes..."
-          class="mr-sm-2"
+          class="mr-sm-2 mb-2"
         ></b-form-input>
-        <b-button variant="outline-success" @click="searchRecipes">Search</b-button>
-      </b-form>
-
-      <!-- Filters -->
-      <div>
-        <b-form-group label="Time (in minutes):">
+        <b-form-group label="Time (in minutes):" class="mb-2">
           <b-form-input type="number" v-model="maxTime" placeholder="Max time"></b-form-input>
         </b-form-group>
-        <b-form-group label="Minimum Likes:">
+        <b-form-group label="Minimum Likes:" class="mb-2">
           <b-form-input type="number" v-model="minLikes" placeholder="Minimum likes"></b-form-input>
         </b-form-group>
-        <b-form-checkbox v-model="isVegan">Vegan</b-form-checkbox>
-        <b-form-checkbox v-model="isVegetarian">Vegetarian</b-form-checkbox>
-        <b-form-checkbox v-model="isGlutenFree">Gluten-free</b-form-checkbox>
-      </div>
+        <b-form-checkbox v-model="isVegan" class="mb-2">Vegan</b-form-checkbox>
+        <b-form-checkbox v-model="isVegetarian" class="mb-2">Vegetarian</b-form-checkbox>
+        <b-form-checkbox v-model="isGlutenFree" class="mb-2">Gluten-free</b-form-checkbox>
+        <b-form-group label="Results per page:" class="mb-2">
+          <b-form-select v-model="resultsPerPage" :options="[5, 10, 15]"></b-form-select>
+        </b-form-group>
+        <b-button type="submit" variant="outline-success">Search</b-button>
+      </b-form>
 
-      <!-- Results per page -->
-      <b-form-group label="Results per page:">
-        <b-form-select v-model="resultsPerPage" :options="[5, 10, 15]" class="mr-sm-2"></b-form-select>
-      </b-form-group>
-
-      <!-- Display Search Results in a grid layout -->
-      <div class="recipes-grid" v-if="recipes.length > 0">
+      <div v-if="loading" class="mt-3">Loading...</div>
+      <div v-else-if="error" class="mt-3">Error: {{ error }}</div>
+      <div v-else-if="recipes.length > 0" class="recipes-grid mt-3">
         <RecipePreview
           v-for="recipe in recipes"
           :key="recipe.id"
           :recipe="recipe"
+          @updateLastViewed="handleLastViewedUpdate"
         />
       </div>
-      <div v-else>No results found.</div>
+      <div v-else class="mt-3">No results found.</div>
     </div>
   </div>
 </template>
 
 <script>
-import { mockGetRecipesPreview } from '@/services/recipes';
+import { searchRecipesComplex } from '@/services/recipes';
 import RecipePreview from '@/components/RecipePreview.vue';
 
 export default {
@@ -63,60 +56,83 @@ export default {
       isVegan: false,
       isVegetarian: false,
       isGlutenFree: false,
-      resultsPerPage: 5
+      resultsPerPage: 5,
+      loading: false,
+      error: null
     };
   },
   methods: {
-    searchRecipes() {
-      let response = mockGetRecipesPreview(this.resultsPerPage);
-      
-        this.recipes = response.data.recipes.filter(recipe => {
-          return (!this.maxTime || recipe.readyInMinutes <= this.maxTime) &&
-                 (!this.minLikes || recipe.aggregateLikes >= this.minLikes) &&
-                 (!this.isVegan || recipe.vegan) &&
-                 (!this.isVegetarian || recipe.vegetarian) &&
-                 (!this.isGlutenFree || recipe.glutenFree);
-        });
-        sessionStorage.setItem('lastSearch', this.query); // Save last search
-      
+    async searchRecipes() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const params = {
+          query: this.query,
+          number: this.resultsPerPage,
+          maxReadyTime: this.maxTime,
+          minLikes: this.minLikes,
+          diet: this.isVegan ? 'vegan' : (this.isVegetarian ? 'vegetarian' : undefined),
+          intolerances: this.isGlutenFree ? 'gluten' : undefined,
+          addRecipeInformation: true,
+          fillIngredients: true
+        };
+        const response = await searchRecipesComplex(params);
+        this.recipes = response.results.map(recipe => ({
+          ...recipe,
+          vegan: recipe.vegan,
+          vegetarian: recipe.vegetarian,
+          glutenFree: recipe.glutenFree,
+          readyInMinutes: recipe.readyInMinutes,
+          aggregateLikes: recipe.aggregateLikes
+        }));
+        sessionStorage.setItem('lastSearch', this.query);
+      } catch (error) {
+        this.error = 'Failed to fetch recipes. Please try again.';
+        console.error('Error fetching recipes:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+    handleLastViewedUpdate(lastViewed) {
+      // Update last viewed recipes in localStorage
+      localStorage.setItem('lastViewedRecipes', JSON.stringify(lastViewed));
     }
   },
   mounted() {
     this.query = sessionStorage.getItem('lastSearch') || '';
     if (this.query) {
-      this.searchRecipes(); // Perform search if there was a previous search
+      this.searchRecipes();
     }
   }
 };
 </script>
 
 <style scoped>
-
 .container {
-  max-width: 1200px; /* Adjust based on your preference */
+  max-width: 1200px;
   margin: auto;
   padding: 20px;
-  position: relative; /* Ensures content is positioned relative to other elements */
-  filter: none; /* Explicitly removing any inherited filters */
-  background: rgba(255, 255, 255, 0.8); /* Optional: Add a slight background to content for better readability */
+  position: relative;
+  filter: none;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .recipes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Creates three columns as default */
-  gap: 20px; /* Space between grid items */
-  filter: none; /* Explicitly state no filter for clarity */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  filter: none;
 }
 
 @media (max-width: 800px) {
   .recipes-grid {
-    grid-template-columns: repeat(2, 1fr); /* Two columns on smaller screens */
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 500px) {
   .recipes-grid {
-    grid-template-columns: 1fr; /* One column on very small screens */
+    grid-template-columns: 1fr;
   }
 }
 </style>

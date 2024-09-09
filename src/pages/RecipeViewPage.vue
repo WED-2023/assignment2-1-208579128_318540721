@@ -17,14 +17,36 @@
         <div class="instructions-box">
           <h3>Instructions:</h3>
           <ol>
-            <li v-for="(instruction, index) in recipe.analyzedInstructions" :key="index">
-              {{ instruction }}
+            <li v-for="(step, index) in recipe.analyzedInstructions[0].steps" :key="index">
+              <p><strong>Step {{ step.number }}:</strong> {{ step.step }}</p>
+              
+              <div v-if="step.ingredients.length">
+                <strong>Ingredients:</strong>
+                <ul>
+                  <li v-for="ingredient in step.ingredients" :key="ingredient.id">
+                    {{ ingredient.name }} <img :src="`https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}`" alt="ingredient image" />
+                  </li>
+                </ul>
+              </div>
+              
+              <div v-if="step.equipment.length">
+                <strong>Equipment:</strong>
+                <ul>
+                  <li v-for="equipment in step.equipment" :key="equipment.id">
+                    {{ equipment.name }} <img :src="`https://spoonacular.com/cdn/equipment_100x100/${equipment.image}`" alt="equipment image" />
+                  </li>
+                </ul>
+              </div>
+
+              <div v-if="step.length">
+                <p><strong>Time:</strong> {{ step.length.number }} {{ step.length.unit }}</p>
+              </div>
             </li>
           </ol>
         </div>
         <div class="summary-box mt-4">
           <h3>Summary:</h3>
-          <p>{{ recipe.summary }}</p>
+          <p v-html="formattedSummary"></p>
         </div>
       </div>
     </div>
@@ -38,7 +60,6 @@
 import { mockGetRecipeFullDetails } from "../services/recipes.js";
 
 export default {
-
   props: {
     id: {
       type: String,
@@ -47,54 +68,52 @@ export default {
   },
   data() {
     return {
-      recipe: null
+      recipe: null,
+      formattedSummary: ''
     };
   },
   async created() {
     try {
-
-      const response = mockGetRecipeFullDetails(this.id);
+      console.log(this.id);
+      const response = await mockGetRecipeFullDetails(this.id);
 
       if (!response || !response.data || !response.data.recipe) {
-        console.error('Recipe not found or invalid response structure:', response);
         this.$router.replace("/NotFound");
         return;
       }
 
       const {
         analyzedInstructions,
-        instructions,
         extendedIngredients,
-        aggregateLikes,
-        readyInMinutes,
         image,
         title,
-        vegan,
-        vegetarian,
-        glutenFree,
         summary
       } = response.data.recipe;
 
-      const _recipe = {
-        instructions,
+      this.recipe = {
         analyzedInstructions,
         extendedIngredients,
-        aggregateLikes,
-        readyInMinutes,
         image,
         title,
-        vegan,
-        vegetarian,
-        glutenFree,
         summary
       };
 
-      this.recipe = _recipe;
+      this.formattedSummary = this.formatSummary(summary);
     } catch (error) {
       console.error('Error fetching recipe:', error);
       this.$router.replace("/NotFound");
     }
   },
+  methods: {
+    formatSummary(summary) {
+      // Simple parsing and formatting for demonstration
+      // You may need to adjust this based on the actual content structure
+      return summary
+        .replace(/@.*?\./, '') // Remove source references
+        .replace(/<\/b>/g, '</strong>') // Convert <b> to <strong>
+        .replace(/<b>/g, '<strong>'); // Convert <b> to <strong>
+    }
+  }
 };
 </script>
 
@@ -137,9 +156,12 @@ h3 {
   margin-bottom: 10px;
 }
 
-
 p {
   line-height: 1.6;
 }
-</style>
 
+img {
+  max-width: 100px;
+  margin-left: 10px;
+}
+</style>

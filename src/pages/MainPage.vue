@@ -3,12 +3,14 @@
     <NavigationBar />
     <h1 class="title">Main Page</h1>
 
-
     <div class="columns">
       <!-- Left Column -->
       <div class="column">
         <h2>Explore these recipes</h2>
-        <RecipePreviewList :recipes="randomRecipes" />
+        <RecipePreviewList 
+          :recipes="randomRecipes" 
+          @updateLastViewed="handleLastViewedUpdate"
+        />
         <b-button variant="primary" @click="generateNewRecipes">Generate New Recipes</b-button>
       </div>
 
@@ -19,7 +21,10 @@
 
         <div v-if="$root.store.username">
           <div v-if="lastViewedRecipes.length > 0">
-            <RecipePreviewList :recipes="lastViewedRecipes" />
+            <RecipePreviewList 
+              :recipes="lastViewedRecipes" 
+              @updateLastViewed="handleLastViewedUpdate"
+            />
           </div>
           <div v-else>
             <p>You have not viewed any recipes yet.</p>
@@ -37,8 +42,7 @@
 
 <script>
 import RecipePreviewList from "../components/RecipePreviewList";
-import { mockGetRecipesPreview, mockGetRecipesPreviewByIds } from "../services/recipes.js";
-
+import { getRecipesPreview } from "../services/recipes.js";
 
 export default {
   components: {
@@ -47,7 +51,6 @@ export default {
   data() {
     return {
       randomRecipes: [],
-      lastViewedRecipeIds: [], // Store the IDs of last viewed recipes
       lastViewedRecipes: [] // Store the last viewed recipes
     };
   },
@@ -58,26 +61,25 @@ export default {
     }
   },
   methods: {
-    generateNewRecipes() {
+    async generateNewRecipes() {
       const amountToFetch = 3;
-      const response = mockGetRecipesPreview(amountToFetch);
-      this.randomRecipes = response.data.recipes;
-
-     
-
+      try {
+        const response = await getRecipesPreview(amountToFetch);
+        this.randomRecipes = response.data.recipes;
+      } catch (error) {
+        console.error("Error fetching new recipes:", error);
+      }
     },
 
     loadLastViewedRecipes() {
-      const lastViewedIds = JSON.parse(localStorage.getItem('lastViewedRecipes')) || [];
-        // Call the function to get the preview list of last viewed recipes by their IDs
-      const response2 = mockGetRecipesPreviewByIds(lastViewedIds);
-      this.lastViewedRecipes = response2.data.recipes
-      console.log(this.lastViewedRecipes);
+      const lastViewed = JSON.parse(localStorage.getItem('lastViewedRecipes')) || [];
+      this.lastViewedRecipes = lastViewed.slice(0, 3); // Only keep the last 3
+    },
 
-
-      
+    handleLastViewedUpdate(updatedLastViewed) {
+      this.lastViewedRecipes = updatedLastViewed.slice(0, 3); // Only keep the last 3
+      localStorage.setItem('lastViewedRecipes', JSON.stringify(this.lastViewedRecipes));
     }
-
   }
 };
 </script>

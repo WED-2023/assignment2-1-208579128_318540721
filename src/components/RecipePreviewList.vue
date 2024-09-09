@@ -9,16 +9,29 @@
         <RecipePreview
           class="recipePreview"
           :recipe="r"
+          @previewClick="handlePreviewClick"
+          @updateLastViewed="updateLastViewed"
         />
       </b-col>
     </b-row>
+    <div v-if="showLastViewed">
+      <h4>Last Viewed Recipes</h4>
+      <b-row>
+        <b-col v-for="r in lastViewedRecipes" :key="r.id">
+          <RecipePreview
+            class="recipePreview"
+            :recipe="r"
+            @previewClick="handlePreviewClick"
+            @updateLastViewed="updateLastViewed"
+          />
+        </b-col>
+      </b-row>
+    </div>
   </b-container>
 </template>
 
 <script>
 import RecipePreview from "./RecipePreview.vue";
-import { mockGetRecipesPreview } from "../services/recipes.js";
-
 
 export default {
   name: "RecipePreviewList",
@@ -33,11 +46,16 @@ export default {
     recipes: {
       type: Array,
       required: true
+    },
+    showLastViewed: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
-      recipesWithClickedState: []
+      recipesWithClickedState: [],
+      lastViewedRecipes: []
     };
   },
   watch: {
@@ -56,8 +74,21 @@ export default {
         favorite: localStorage.getItem(`favorite_${recipe.id}`) === 'true'
       }));
       this.recipesWithClickedState = updatedRecipes;
-
+    },
+    handlePreviewClick(recipeId) {
+      const clickedRecipe = this.recipesWithClickedState.find(r => r.id === recipeId);
+      if (clickedRecipe) {
+        clickedRecipe.clicked = true;
+        this.$forceUpdate(); // Force Vue to re-render
+      }
+    },
+    updateLastViewed(lastViewed) {
+      this.lastViewedRecipes = lastViewed;
+      localStorage.setItem('lastViewedRecipes', JSON.stringify(lastViewed));
     }
+  },
+  mounted() {
+    this.lastViewedRecipes = JSON.parse(localStorage.getItem('lastViewedRecipes')) || [];
   }
 };
 </script>
