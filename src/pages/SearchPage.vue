@@ -1,166 +1,130 @@
 <template>
   <div>
-    <!-- Background Container for Blurred Image -->
-    <div class="background-container"></div>
+    <h1>Recipe Search</h1>
+    <b-form @submit.prevent="searchRecipes">
+      <b-form-input v-model="query" placeholder="Search for recipes..." class="mb-2"></b-form-input>
+      
+      <b-form-group label="Cuisine:">
+        <b-form-select v-model="selectedCuisine" :options="cuisineOptions"></b-form-select>
+      </b-form-group>
+      
+      <b-form-group label="Diet:">
+        <b-form-select v-model="selectedDiet" :options="dietOptions"></b-form-select>
+      </b-form-group>
+      
+      <b-form-group label="Intolerances:">
+        <b-form-select v-model="selectedIntolerances" :options="intoleranceOptions" multiple></b-form-select>
+      </b-form-group>
+      
+      <b-form-group label="Results per page:">
+        <b-form-select v-model="resultsPerPage" :options="[5, 10, 15]"></b-form-select>
+      </b-form-group>
+      
+      <b-button type="submit" variant="primary">Search</b-button>
+    </b-form>
 
-    <!-- Main Container for Content -->
-    <div class="container">
-      <h1 class="title">Search Recipes</h1>
-      <b-form inline>
-        <b-form-input
-          v-model="query"
-          placeholder="Search for recipes..."
-          class="mr-sm-2"
-        ></b-form-input>
-        <b-button variant="outline-success" @click="searchRecipes">Search</b-button>
-
-        <!-- Sorting Options -->
-        <b-form-select v-model="sortOrder" class="ml-2">
-          <option value="none">No Sorting</option>
-          <option value="timeAsc">Time - Ascending</option>
-          <option value="timeDesc">Time - Descending</option>
-          <option value="likesAsc">Likes - Ascending</option>
-          <option value="likesDesc">Likes - Descending</option>
-        </b-form-select>
-
-        <!-- Results per page -->
-        <b-form-select v-model="resultsPerPage" class="ml-2">
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="15">15</option>
-        </b-form-select>
-
-        <!-- Filters Dropdown -->
-        <b-dropdown text="Filters" class="ml-2" variant="outline-info">
-          <b-dropdown-form>
-            <b-form-group label="Time (in minutes):">
-              <b-form-input type="number" v-model="maxTime" placeholder="Max time"></b-form-input>
-            </b-form-group>
-            <b-form-group label="Minimum Likes:">
-              <b-form-input type="number" v-model="minLikes" placeholder="Minimum likes"></b-form-input>
-            </b-form-group>
-            <b-form-checkbox v-model="isVegan">Vegan</b-form-checkbox>
-            <b-form-checkbox v-model="isVegetarian">Vegetarian</b-form-checkbox>
-            <b-form-checkbox v-model="isGlutenFree">Gluten-free</b-form-checkbox>
-          </b-dropdown-form>
-        </b-dropdown>
-      </b-form>
-
-      <!-- Display Search Results in a grid layout -->
-      <div class="recipes-grid" v-if="recipes.length > 0">
-        <RecipePreview
-          v-for="recipe in recipes"
-          :key="recipe.id"
-          :recipe="recipe"
-        />
+    <div v-if="loading">Loading...</div>
+    <div v-else-if="recipes.length > 0">
+      <h2>Search Results</h2>
+      <b-form-group label="Sort by:">
+        <b-form-select v-model="sortBy" :options="sortOptions" @change="sortRecipes"></b-form-select>
+      </b-form-group>
+      <div v-for="recipe in recipes" :key="recipe.id">
+        <RecipePreview :recipe="recipe" />
       </div>
-      <div v-else>No results found.</div>
     </div>
+    <div v-else-if="hasSearched">No results found.</div>
   </div>
 </template>
 
 <script>
-import { mockGetRecipesPreview } from '@/services/recipes';
+import { searchRecipes } from '@/services/recipes';
 import RecipePreview from '@/components/RecipePreview.vue';
 
 export default {
-  components: {
-    RecipePreview
-  },
+  components: { RecipePreview },
   data() {
     return {
       query: '',
+      selectedCuisine: '',
+      selectedDiet: '',
+      selectedIntolerances: [],
+      resultsPerPage: 5,
       recipes: [],
-      maxTime: null,
-      minLikes: null,
-      isVegan: false,
-      isVegetarian: false,
-      isGlutenFree: false,
-      resultsPerPage: 5, // Initialize with 5 to match the default option
-      sortOrder: 'none'
+      loading: false,
+      hasSearched: false,
+      sortBy: 'popularity',
+      cuisineOptions: [
+        { value: '', text: 'All Cuisines' },
+        { value: 'italian', text: 'Italian' },
+        { value: 'mexican', text: 'Mexican' },
+        // Add more cuisines as needed
+      ],
+      dietOptions: [
+        { value: '', text: 'No Specific Diet' },
+        { value: 'vegetarian', text: 'Vegetarian' },
+        { value: 'vegan', text: 'Vegan' },
+        // Add more diets as needed
+      ],
+      intoleranceOptions: [
+        { value: 'dairy', text: 'Dairy' },
+        { value: 'egg', text: 'Egg' },
+        { value: 'gluten', text: 'Gluten' },
+        // Add more intolerances as needed
+      ],
+      sortOptions: [
+        { value: 'popularity', text: 'Popularity' },
+        { value: 'time', text: 'Preparation Time' },
+      ],
     };
   },
-  watch: {
-    resultsPerPage() {
-      this.searchRecipes();
-    },
-    sortOrder() {
-      this.searchRecipes();
-    }
-  },
   methods: {
-    searchRecipes() {
-      let response = mockGetRecipesPreview(this.resultsPerPage);
-      this.recipes = response.data.recipes.filter(recipe => {
-        return (!this.maxTime || recipe.readyInMinutes <= this.maxTime) &&
-               (!this.minLikes || recipe.aggregateLikes >= this.minLikes) &&
-               (!this.isVegan || recipe.vegan) &&
-               (!this.isVegetarian || recipe.vegetarian) &&
-               (!this.isGlutenFree || recipe.glutenFree);
-      });
-      this.sortRecipes(); // Sort recipes after filtering
-      sessionStorage.setItem('lastSearch', this.query); // Save last search
-    },
-    sortRecipes() {
-      if (this.sortOrder === 'timeAsc') {
-        this.recipes.sort((a, b) => a.readyInMinutes - b.readyInMinutes);
-      } else if (this.sortOrder === 'timeDesc') {
-        this.recipes.sort((a, b) => b.readyInMinutes - a.readyInMinutes);
-      } else if (this.sortOrder === 'likesAsc') {
-        this.recipes.sort((a, b) => a.aggregateLikes - b.aggregateLikes);
-      } else if (this.sortOrder === 'likesDesc') {
-        this.recipes.sort((a, b) => b.aggregateLikes - a.aggregateLikes);
+    async searchRecipes() {
+      this.loading = true;
+      this.hasSearched = true;
+      try {
+        const response = await searchRecipes({
+          query: this.query,
+          cuisine: this.selectedCuisine,
+          diet: this.selectedDiet,
+          intolerances: this.selectedIntolerances.join(','),
+          number: this.resultsPerPage,
+        });
+        this.recipes = response.results;
+        this.sortRecipes();
+        localStorage.setItem('lastSearch', JSON.stringify({
+          query: this.query,
+          cuisine: this.selectedCuisine,
+          diet: this.selectedDiet,
+          intolerances: this.selectedIntolerances,
+          resultsPerPage: this.resultsPerPage,
+        }));
+      } catch (error) {
+        console.error('Error searching recipes:', error);
+      } finally {
+        this.loading = false;
       }
     },
-    clearSearch() {
-      this.query = '';
-      this.recipes = [];
-      this.maxTime = null;
-      this.minLikes = null;
-      this.isVegan = false;
-      this.isVegetarian = false;
-      this.isGlutenFree = false;
-      this.sortOrder = 'none';
-      this.resultsPerPage = 5;
-    }
+    sortRecipes() {
+      this.recipes.sort((a, b) => {
+        if (this.sortBy === 'popularity') {
+          return b.aggregateLikes - a.aggregateLikes;
+        } else if (this.sortBy === 'time') {
+          return a.readyInMinutes - b.readyInMinutes;
+        }
+      });
+    },
   },
   mounted() {
-    this.$root.$on('clearSearch', this.clearSearch);
-    this.query = sessionStorage.getItem('lastSearch') || '';
-    if (this.query) {
-      this.searchRecipes(); // Perform search if there was a previous search
+    const lastSearch = JSON.parse(localStorage.getItem('lastSearch'));
+    if (lastSearch) {
+      this.query = lastSearch.query;
+      this.selectedCuisine = lastSearch.cuisine;
+      this.selectedDiet = lastSearch.diet;
+      this.selectedIntolerances = lastSearch.intolerances;
+      this.resultsPerPage = lastSearch.resultsPerPage;
+      this.searchRecipes();
     }
   },
-  beforeDestroy() {
-    this.$root.$off('clearSearch', this.clearSearch);
-  }
 };
 </script>
-
-<style scoped>
-
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
-  position: relative;
-}
-
-.recipes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Ensure exactly three columns */
-  gap: 20px;
-}
-
-@media (max-width: 800px) {
-  .recipes-grid {
-    grid-template-columns: repeat(2, 1fr); /* Two columns for smaller screens */
-  }
-}
-
-@media (max-width: 500px) {
-  .recipes-grid {
-    grid-template-columns: 1fr; /* One column for very small screens */
-  }
-}
-</style>
