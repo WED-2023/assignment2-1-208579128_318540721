@@ -14,7 +14,7 @@
           type="text"
           :state="validateState('username')"
         ></b-form-input>
-        <b-form-invalid-feedback v-if="!$v.form.username.required">
+        <b-form-invalid-feedback>
           Username is required
         </b-form-invalid-feedback>
       </b-form-group>
@@ -31,7 +31,7 @@
           v-model="$v.form.password.$model"
           :state="validateState('password')"
         ></b-form-input>
-        <b-form-invalid-feedback v-if="!$v.form.password.required">
+        <b-form-invalid-feedback>
           Password is required
         </b-form-invalid-feedback>
       </b-form-group>
@@ -62,11 +62,10 @@
 
 <script>
 import { required } from "vuelidate/lib/validators";
-import { validationMixin } from "vuelidate";
+import axios from 'axios';
 
 export default {
   name: "Login",
-  mixins: [validationMixin],
   data() {
     return {
       form: {
@@ -91,32 +90,38 @@ export default {
       const { $dirty, $error } = this.$v.form[param];
       return $dirty ? !$error : null;
     },
-    checkCredentials(username, password) {
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      const user = users.find(user => user.username === username);
-      return user && user.password === password;
-    },
-    clearSearchResults() {
-      sessionStorage.removeItem('lastSearch');
-      this.$root.$emit('clearSearch');
-    },
     async Login() {
       try {
-        if (!this.checkCredentials(this.form.username, this.form.password)) {
-          throw new Error('Invalid username or password');
-        }
+        const response = await axios.post(
+          `http://localhost:80/Login`,
+          {
+            username: this.form.username,
+            password: this.form.password
+          },
+          {
+            withCredentials: true // This is important for sending/receiving cookies
+          }
+        );
 
-        this.$root.store.login(this.form.username);
-        this.clearSearchResults(); // Clear search results on login
-        this.$router.push("/");
+        if (response.data.success) {
+          // Store username in localStorage
+          localStorage.setItem('username', this.form.username);
+          
+          this.$root.store.login(this.form.username);
+          this.$router.push("/");
+        } else {
+          throw new Error(response.data.message || "Login failed");
+        }
       } catch (err) {
-        this.form.submitError = err.message || 'Login failed';
+        console.error(err);
+        this.form.submitError = err.response?.data?.message || err.message || "An error occurred during login";
       }
     },
+
     onLogin() {
       this.form.submitError = undefined;
       this.$v.form.$touch();
-      if (this.$v.form.$invalid) {
+      if (this.$v.form.$anyError) {
         return;
       }
       this.Login();
