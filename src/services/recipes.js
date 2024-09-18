@@ -1,49 +1,93 @@
 // src/services/recipes.js
 import recipe_full_view from "../assets/mocks/recipe_full_view.json";
 import recipe_preview from "../assets/mocks/recipe_preview.json";
+import axios from 'axios';
 
 
-export function mockGetRecipesPreview(amount = 1) {
-
-  // Shuffle the recipes array to ensure randomness
-  const shuffledRecipes = recipe_preview.sort(() => 0.5 - Math.random());
+const API_KEY = '99ab614dbe09428a9d9c23702a187dbb'; 
+const BASE_URL = 'https://api.spoonacular.com/recipes';
 
 
-  // Ensure that the amount does not exceed the total number of recipes
-  const maxAmount = Math.min(amount, shuffledRecipes.length);
 
-  // Select a random subset of recipes based on the requested amount
-  const selectedRecipes = shuffledRecipes.slice(0, maxAmount).map((recipe, index) => ({
-    ...recipe,
-  }));
+// Function to get a list of recipe previews
+export async function getRecipesPreview(amount = 1) {
+  try {
+    // Call your backend server (localhost:80)
+    const response = await axios.get(`http://localhost:80/recipes/recipePreviews`, {
+      params: { number: amount },
+    });
 
-  // Return an object containing the selected recipes
-  return {
-    status: 200, 
-    data: { recipes: selectedRecipes } };
-}
+    console.log('API response:', response.data);
 
-export function mockGetRecipeFullDetails(recipeId) {
-
-  // Ensure recipeId is an integer
-  const id = parseInt(recipeId, 10);
-
-  // Find the recipe with the matching ID
-  const selected_recipe = recipe_full_view.find(recipe => recipe.id === id);
-
-  if (selected_recipe) {
-    return { data: { recipe: selected_recipe } };
-  } else {
-    return null; // Handle the case where the recipe is not found
+    // Return the fetched recipe previews
+    return {
+      status: 200,
+      data: { recipes: response.data.data },  // response.data is now the array of recipes
+    };
+  } catch (error) {
+    console.error('Error fetching recipe previews:', error);
+    return {
+      status: error.response ? error.response.status : 500,
+      data: { message: error.message },
+    };
   }
 }
-export function mockGetRecipesPreviewByIds(recipeIds = []) {
+
+
+// Function to get a list of recipe previews or full recipe information
+export async function mockGetRecipeFullDetails(recipeId) {
+  try {
+    // Call your backend server (localhost:80)
+    const response = await axios.get(`http://localhost:80/recipes/recipe/${recipeId}`);
+
+    console.log('API response:', response.data);
+
+    // Return the fetched recipe details
+    return {
+      status: 200,
+      data: { recipes: response.data.recipes},  // Access the recipe data
+    };
+  } catch (error) {
+    console.error('Error fetching recipe details:', error);
+    return {
+      status: error.response ? error.response.status : 500,
+      data: { message: error.message },
+    };
+  }
+}
+
+// Function to get multiple recipes by IDs
+export function getRecipesPreviewByIds(recipeIds = []) {
   // Filter the recipe previews to include only those with matching IDs
   const selectedRecipes2 = recipe_preview.filter(recipe => recipeIds.includes(recipe.id));
   console.log(selectedRecipes2)
 
   // Return an object containing the selected recipes
   return { data: { recipes: selectedRecipes2 } };
+}
+
+export async function searchRecipesComplex(params) {
+  try {
+    const response = await axios.get(`${BASE_URL}/complexSearch`, {
+      params: {
+        ...params,
+        apiKey: API_KEY,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error searching recipes:', error);
+    throw error;
+  }
+}
+export async function searchRecipes(params) {
+  try {
+    const response = await axios.get('http://localhost:80/recipes/search', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error in searchRecipes:', error);
+    throw error;
+  }
 }
 
   
