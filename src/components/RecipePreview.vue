@@ -1,5 +1,5 @@
 <template>
-  <div :class="['recipe-preview', { 'clicked': recipe.clicked }]" @click="handleClick">
+  <div :class="['recipe-preview', { 'clicked': isClicked }]" @click="handleClick">
     <img :src="recipe.image" alt="recipe image" @mouseover="onHover" @mouseleave="onLeave">
     <div class="recipe-details">
       <h3>{{ recipe.title }}</h3>
@@ -24,19 +24,28 @@ export default {
   props: {
     recipe: Object
   },
+  data() {
+    return {
+      isClicked: false
+    }
+  },
   methods: {
     handleClick() {
       this.$emit('previewClick', this.recipe.id);
-      this.recipe.clicked = true;
+      this.isClicked = true;
       localStorage.setItem(`clicked_${this.recipe.id}`, 'true');
 
       // Update last viewed list
       let lastViewed = JSON.parse(localStorage.getItem('lastViewedRecipes')) || [];
-      lastViewed = lastViewed.filter(id => id !== this.recipe.id); // Remove if it exists
-      lastViewed.unshift(this.recipe.id); // Add to the front
-      if (lastViewed.length > 3) lastViewed.pop(); // Keep only the last 3
+      lastViewed = lastViewed.filter(r => r.id !== this.recipe.id);
+      lastViewed.unshift(this.recipe);
+      if (lastViewed.length > 3) lastViewed.pop();
       localStorage.setItem('lastViewedRecipes', JSON.stringify(lastViewed));
 
+      // Emit an event to notify parent component about the change in last viewed recipes
+      this.$emit('updateLastViewed', lastViewed);
+
+      // Programmatic navigation
       this.$router.push({ name: 'recipe', params: { id: this.recipe.id } });
     },
     toggleFavorite() {
@@ -50,6 +59,7 @@ export default {
       }
 
       localStorage.setItem('favoriteRecipes', JSON.stringify(favorites));
+      localStorage.setItem(`favorite_${this.recipe.id}`, this.recipe.favorite);
     },
     onHover(event) {
       event.target.style.cursor = 'pointer';
@@ -59,7 +69,8 @@ export default {
     }
   },
   mounted() {
-    this.recipe.favorite = JSON.parse(localStorage.getItem('favoriteRecipes') || '[]').some(r => r.id === this.recipe.id);
+    this.isClicked = localStorage.getItem(`clicked_${this.recipe.id}`) === 'true';
+    this.recipe.favorite = localStorage.getItem(`favorite_${this.recipe.id}`) === 'true';
   }
 };
 </script>
@@ -70,9 +81,9 @@ export default {
   padding: 10px;
   margin: 10px;
   text-align: center;
-  width: 300px; /* Fixed width */
-  height: 580px; /* Fixed height */
-  overflow: hidden; /* Hide overflow content */
+  width: 300px;
+  height: 580px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -81,8 +92,8 @@ export default {
 .recipe-preview img {
   width: 100%;
   height: auto;
-  max-height: 200px; /* Ensure the image fits within the fixed height */
-  object-fit: cover; /* Crop the image to fit within the bounds */
+  max-height: 200px;
+  object-fit: cover;
 }
 
 .recipe-details {
