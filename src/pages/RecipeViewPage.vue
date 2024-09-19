@@ -1,152 +1,94 @@
 <template>
-  <div class="container">
-    <div v-if="recipe">
-      <div class="recipe-header mt-3 mb-4">
-        <h1>{{ recipe.title }}</h1>
-        <img :src="recipe.image" class="center" />
-      </div>
-      <div class="recipe-body">
-        <div class="ingredients-box">
-          <h3>Ingredients:</h3>
-          <ul>
-            <li v-for="(ingredient, index) in recipe.extendedIngredients" :key="index">
-              {{ ingredient.original }}
-            </li>
-          </ul>
-        </div>
-        <div class="instructions-box">
-          <h3>Instructions:</h3>
-          <ol>
-            <li v-for="(instruction, index) in recipe.analyzedInstructions" :key="index">
-              {{ instruction }}
-            </li>
-          </ol>
-        </div>
-        <div class="summary-box mt-4">
-          <h3>Summary:</h3>
-          <p>{{ recipe.summary }}</p>
-        </div>
-        <div class="additional-details mt-4">
-          <p>Time: {{ recipe.readyInMinutes }} mins</p>
-          <p>Likes: {{ recipe.aggregateLikes }}</p>
-          <p>Vegan: {{ recipe.vegan ? 'Yes' : 'No' }}</p>
-          <p>Vegetarian: {{ recipe.vegetarian ? 'Yes' : 'No' }}</p>
-          <p>Gluten-free: {{ recipe.glutenFree ? 'Yes' : 'No' }}</p>
-        </div>
-      </div>
+  <div v-if="recipe" class="recipe-view">
+    <h1>{{ recipe.title }}</h1>
+    <img :src="recipe.image" :alt="recipe.title" class="recipe-image" />
+
+    <!-- Render Ingredients if they exist -->
+    <h3 v-if="recipe.extendedIngredients">Ingredients:</h3>
+    <ul v-if="recipe.extendedIngredients && recipe.extendedIngredients.length">
+      <li v-for="ingredient in recipe.extendedIngredients" :key="ingredient.id">
+        {{ ingredient.amount }} {{ ingredient.unit }} of {{ ingredient.nameClean || ingredient.name }} 
+        ({{ ingredient.original || ingredient.name }})
+      </li>
+    </ul>
+
+    <!-- Render Instructions differently based on the recipe source -->
+    <h3>Instructions:</h3>
+    <div v-if="recipe.analyzedInstructions && recipe.analyzedInstructions.length">
+      <ol>
+        <li v-for="step in recipe.analyzedInstructions[0]?.steps" :key="step.number">
+          {{ step.step }}
+        </li>
+      </ol>
     </div>
     <div v-else>
-      <p>Loading...</p>
+      <p v-html="recipe.instructions.split('\n\n').join('<br/><br/>')"></p>
     </div>
+
+    <!-- Additional Information -->
+    <h3>Additional Information</h3>
+    <ul>
+      <li>Ready in: {{ recipe.readyInMinutes || recipe.ready_in_minutes }} minutes</li>
+      <li v-if="recipe.servings">Servings: {{ recipe.servings }}</li>
+      <li v-if="recipe.healthScore">Health Score: {{ recipe.healthScore }}</li>
+      <li v-if="recipe.aggregate_likes">Likes: {{ recipe.aggregate_likes }}</li>
+      <li>Vegan: {{ recipe.vegan ? 'Yes' : 'No' }}</li>
+      <li>Vegetarian: {{ recipe.vegetarian ? 'Yes' : 'No' }}</li>
+      <li>Gluten-Free: {{ recipe.glutenFree ? 'Yes' : 'No' }}</li>
+    </ul>
+  </div>
+
+  <div v-else>
+    <p>Loading recipe details...</p>
+    <p v-if="errorMessage">{{ errorMessage }}</p>
   </div>
 </template>
 
 <script>
-import { mockGetRecipeFullDetails } from "../services/recipes.js";
+import axios from "axios";
 
 export default {
-  props: {
-    id: {
-      type: String,
-      required: true
-    }
-  },
+  name: "RecipeViewPage",
+  props: ["id"], // Accept the id prop
   data() {
     return {
-      recipe: null
+      recipe: null,
+      errorMessage: "",
     };
   },
   async created() {
     try {
-      const response = mockGetRecipeFullDetails(this.id);
-
-      if (!response || !response.data || !response.data.recipe) {
-        console.error('Recipe not found or invalid response structure:', response);
-        this.$router.replace("/NotFound");
-        return;
+      // Single API call, let the server handle which data to return
+      const response = await axios.get(`http://localhost:80/recipes/recipe/${this.id}`);
+      
+      if (response.data.success) {
+        this.recipe = response.data.data;
+      } else {
+        this.errorMessage = response.data.message;
       }
-
-      const {
-        analyzedInstructions,
-        instructions,
-        extendedIngredients,
-        aggregateLikes,
-        readyInMinutes,
-        image,
-        title,
-        vegan,
-        vegetarian,
-        glutenFree,
-        summary
-      } = response.data.recipe;
-
-      const _recipe = {
-        instructions,
-        analyzedInstructions,
-        extendedIngredients,
-        aggregateLikes,
-        readyInMinutes,
-        image,
-        title,
-        vegan,
-        vegetarian,
-        glutenFree,
-        summary
-      };
-
-      this.recipe = _recipe;
     } catch (error) {
-      console.error('Error fetching recipe:', error);
-      this.$router.replace("/NotFound");
+      this.errorMessage = "Failed to load recipe. Please try again.";
     }
   },
 };
 </script>
 
 <style scoped>
-.container {
-  padding: 20px;
+.recipe-view {
+  margin: 20px;
 }
 
-.recipe-header {
-  text-align: center;
-}
-
-.recipe-body {
-  margin-top: 20px;
-}
-
-.ingredients-box {
-  margin-bottom: 20px;
-}
-
-.instructions-box {
-  margin-bottom: 20px;
-}
-
-.summary-box {
-  margin-top: 20px;
-}
-
-.additional-details {
-  margin-top: 20px;
+.recipe-image {
+  width: 100%;
+  max-width: 400px;
 }
 
 ul {
-  list-style-type: disc;
-  padding-left: 20px;
-}
-
-ol {
-  list-style-type: decimal;
-  padding-left: 20px;
+  list-style-type: none;
+  padding: 0;
 }
 
 h3 {
-  margin-bottom: 10px;
-}
-
-p {
-  line-height: 1.6;
+  margin-top: 20px;
 }
 </style>
