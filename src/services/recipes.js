@@ -4,7 +4,7 @@ import recipe_preview from "../assets/mocks/recipe_preview.json";
 import axios from 'axios';
 
 
-const API_KEY = '99ab614dbe09428a9d9c23702a187dbb'; 
+const API_KEY = '5fefa3447258402db6c9155debd0e7e6'; 
 const BASE_URL = 'https://api.spoonacular.com/recipes';
 
 
