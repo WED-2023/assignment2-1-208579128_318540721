@@ -9,20 +9,37 @@
       <p>Vegetarian: {{ recipe.vegetarian ? 'Yes' : 'No' }}</p>
       <p>Gluten-free: {{ recipe.glutenFree ? 'Yes' : 'No' }}</p>
     </div>
+
+    <!-- Add to Favorites Button -->
     <b-button 
-      :variant="recipe.favorite ? 'danger' : 'primary'" 
-      @click.stop="toggleFavorite" 
+      @click.stop="addToFavorite" 
       class="favorite-button"
+      variant="primary"
     >
-      {{ recipe.favorite ? 'Remove from Favorites' : 'Add to Favorites' }}
+      Add to Favorites
+    </b-button>
+
+    <!-- Remove from Favorites Button -->
+    <b-button 
+      @click.stop="removeFromFavorite" 
+      class="remove-favorite-button"
+      variant="danger"
+    >
+      Remove from Favorites
     </b-button>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
+  name: 'RecipePreview',
   props: {
-    recipe: Object
+    recipe: {
+      type: Object,
+      required: true
+    }
   },
   data() {
     return {
@@ -48,29 +65,61 @@ export default {
       // Programmatic navigation
       this.$router.push({ name: 'recipe', params: { id: this.recipe.id } });
     },
-    toggleFavorite() {
-      this.recipe.favorite = !this.recipe.favorite;
-      let favorites = JSON.parse(localStorage.getItem('favoriteRecipes')) || [];
-      
-      if (this.recipe.favorite) {
-        favorites.push(this.recipe);
-      } else {
-        favorites = favorites.filter(r => r.id !== this.recipe.id);
-      }
+    
+    // Add to Favorites
+    async addToFavorite() {
+      try {
+        const username = localStorage.getItem('username');
+        if (!username) {
+          alert('Please log in to add favorites.');
+          return;
+        }
 
-      localStorage.setItem('favoriteRecipes', JSON.stringify(favorites));
-      localStorage.setItem(`favorite_${this.recipe.id}`, this.recipe.favorite);
+        // Add to favorites
+        await axios.post('http://localhost:80/recipes/favorites', {
+          username: username,
+          recipeId: this.recipe.id
+        });
+
+        alert('Recipe added to favorites!');
+        this.$emit('favoriteToggled', this.recipe.id, true);
+      } catch (error) {
+        console.error('Error adding to favorites:', error);
+        alert('An error occurred while adding to favorites. Please try again.');
+      }
     },
+
+    // Remove from Favorites
+    async removeFromFavorite() {
+      try {
+        const username = localStorage.getItem('username');
+        if (!username) {
+          alert('Please log in to remove favorites.');
+          return;
+        }
+
+        // Remove from favorites
+        console.log("The receipe:", this.recipe)
+        await axios.delete(`http://localhost:80/recipes/favorites/${username}/${this.recipe.id}`);
+
+        alert('Recipe removed from favorites!');
+        this.$emit('favoriteToggled', this.recipe.id, false);
+      } catch (error) {
+        console.error('Error removing from favorites:', error);
+        alert('An error occurred while removing from favorites. Please try again.');
+      }
+    },
+
     onHover(event) {
       event.target.style.cursor = 'pointer';
     },
+
     onLeave(event) {
       event.target.style.cursor = 'default';
     }
   },
   mounted() {
     this.isClicked = localStorage.getItem(`clicked_${this.recipe.id}`) === 'true';
-    this.recipe.favorite = localStorage.getItem(`favorite_${this.recipe.id}`) === 'true';
   }
 };
 </script>
@@ -100,16 +149,11 @@ export default {
   flex: 1;
 }
 
-.favorite-button {
+.favorite-button, .remove-favorite-button {
   margin-top: 10px;
 }
 
 .clicked {
   background-color: rgb(192, 192, 144);
-}
-
-.favorite {
-  background-color: red;
-  color: white;
 }
 </style>
