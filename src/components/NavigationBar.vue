@@ -15,9 +15,9 @@
             <router-link to="/about" class="nav-link">About</router-link>
           </b-nav-item>
           <!-- New nav item for Family Recipes -->
-          <!-- <b-nav-item>
+          <b-nav-item>
             <router-link to="/family-recipes" class="nav-link">My Family Recipes</router-link>
-          </b-nav-item> -->
+          </b-nav-item>
         </b-navbar-nav>
         <b-navbar-nav class="ml-auto">
           <template v-if="!$root.store.username">
@@ -80,14 +80,10 @@ export default {
   },
   methods: {
     saveRecipe(recipe) {
-      let recipes = JSON.parse(localStorage.getItem('recipes')) || [];
-      recipe.id = Date.now(); // Simple unique ID generation
-      recipes.push(recipe);
-      localStorage.setItem('recipes', JSON.stringify(recipes));
-      this.$root.toast("Success", "Recipe saved successfully!", "success");
-      this.showCreateRecipeModal = false; // Close the modal
+
     },
     logout() {
+      localStorage.clear();
       this.$root.store.username = null;
     }
   }
@@ -107,5 +103,4 @@ export default {
 .navbar-nav .nav-link {
   font-size: 1.1rem;
 }
-
 </style>
