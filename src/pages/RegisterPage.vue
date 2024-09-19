@@ -24,9 +24,6 @@
         <b-form-invalid-feedback v-if="!$v.form.username.alpha">
           Username should only contain letters
         </b-form-invalid-feedback>
-        <b-form-invalid-feedback v-if="form.usernameExists">
-          Username already exists
-        </b-form-invalid-feedback>
       </b-form-group>
 
       <!-- First Name -->
@@ -213,7 +210,6 @@ export default {
         confirmedPassword: "",
         email: "",
         submitError: undefined,
-        usernameExists: false,
       },
       countries: [{ value: null, text: "", disabled: true }],
     };
@@ -266,28 +262,32 @@ export default {
       const { $dirty, $error } = this.$v.form[param];
       return $dirty ? !$error : null;
     },
-    checkUsernameExists(username) {
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      return users.some(user => user.username === username);
-    },
     async Register() {
       try {
         const userDetails = {
           username: this.form.username,
-          firstName: this.form.firstName,
-          lastName: this.form.lastName,
+          firstname: this.form.firstName,
+          lastname: this.form.lastName,
           country: this.form.country,
           password: this.form.password,
           email: this.form.email,
         };
 
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        users.push(userDetails);
-        localStorage.setItem('users', JSON.stringify(users));
+        const response = await axios.post(
+          `http://localhost:80/Register`,
+          userDetails
+        );
 
-        this.$router.push("/login");
+        if (response.data.success) {
+          // Registration successful
+          this.$router.push("/login");
+        } else {
+          // Registration failed
+          throw new Error(response.data.message || 'Registration failed');
+        }
       } catch (err) {
-        this.form.submitError = err.message || 'Unknown error';
+        console.error('Registration error:', err);
+        this.form.submitError = err.response?.data?.message || err.message || 'Unknown error occurred';
       }
     },
     onRegister() {
@@ -295,11 +295,6 @@ export default {
       if (this.$v.$invalid) {
         return;
       }
-      if (this.checkUsernameExists(this.form.username)) {
-        this.form.usernameExists = true;
-        return;
-      }
-      this.form.usernameExists = false;
       this.Register();
     },
     onReset() {
@@ -311,7 +306,6 @@ export default {
         password: "",
         confirmedPassword: "",
         email: "",
-        usernameExists: false,
       };
       this.$nextTick(() => {
         this.$v.$reset();
